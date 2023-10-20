@@ -1,66 +1,109 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy
 
 
-def mean_squared_error(y_true, y_predicted):
-    loss = np.sum((y_true - y_predicted) ** 2) / len(y_true)
-    return loss
+def grad_descent(learning_rate, num_iter=1000):
+    x, y = 1.5, -1
+    weight, bias=0.1, 0.01
+    steps = []
 
+    for iter_num in range(num_iter):
+        steps.append([cur_x1, cur_x2, f(weight, bias)])
 
-def gradient_descent(x, y, iterations=1000, learning_rate=0.0001, stopping_threshold=1e-6):
-    losses = []
-    weights = []
-    current_weight = 0.1
-    current_bias = 0.01
-    n = float(len(x))
-    previous_loss = None
+        # чтобы обновить значения cur_x1 и cur_x2, как мы помним с последнего занятия,
+        # нужно найти производные (градиенты) функции f по этим переменным.
+        x_gradient =learning_rate *
+        y_gradient =
 
-    for i in range(iterations):
-        y_predicted = (current_weight * x) + current_bias
-        current_loss = mean_squared_error(y, y_predicted)
-        if previous_loss and abs(previous_loss - current_loss) <= stopping_threshold:
-            break
-        previous_loss = current_loss
-        losses.append(current_loss)
-        weights.append(current_weight)
-
-        weight_derivative = -(2 / n) * sum(x * (y - y_predicted))
-        bias_derivative = -(2 / n) * sum(y - y_predicted)
-        current_weight = current_weight - (learning_rate * weight_derivative)
-        current_bias = current_bias - (learning_rate * bias_derivative)
-
-        print(f"Iteration {i + 1}: Loss {current_loss}, Weight {current_weight}, Bias {current_bias}")
-
-    plt.figure(figsize=(8, 6))
-    plt.plot(weights, losses)
-    plt.scatter(weights, losses, marker='o', color='red')
-    plt.title("Losses vs Weights")
-    plt.ylabel("Loss")
-    plt.xlabel("Weight")
-    plt.show()
-
-    return current_weight, current_bias
-
+        weight -=f()
+        bias -=
+    return np.array(steps)
 
 def main():
-    X = np.array([32.50234527, 53.42680403, 61.53035803, 47.47563963, 59.81320787,
-                  55.14218841, 52.21179669, 39.29956669, 48.10504169, 52.55001444,
-                  45.41973014, 54.35163488, 44.1640495, 58.16847072, 56.72720806,
-                  48.95588857, 44.68719623, 60.29732685, 45.61864377, 38.81681754])
-    Y = np.array([31.70700585, 68.77759598, 62.5623823, 71.54663223, 87.23092513,
-                  78.21151827, 79.64197305, 59.17148932, 75.3312423, 71.30087989,
-                  55.16567715, 82.47884676, 62.00892325, 75.39287043, 81.43619216,
-                  60.72360244, 82.89250373, 97.37989686, 48.84715332, 56.87721319])
+    import numpy as np
 
-    estimated_weight, estimated_bias = gradient_descent(X, Y, iterations=2000)
-    print(f"Estimated Weight: {estimated_weight}\nEstimated Bias: {estimated_bias}")
-    Y_pred = estimated_weight * X + estimated_bias
-    plt.figure(figsize=(8, 6))
-    plt.scatter(X, Y, marker='o', color='red')
-    plt.plot([min(X), max(X)], [min(Y_pred), max(Y_pred)], color='blue', markerfacecolor='red', markersize=10, linestyle='dashed')
-    plt.xlabel("X")
-    plt.ylabel("Y")
-    plt.show()
+    # Используем векторную запись точки.
+
+    x = np.array([1, 2])
+
+    def f(x):
+
+    # f(x) = 0.5x^2 + 0.2y^2
+
+    return 0.5 * x[0] ** 2 + 0.2 * x[1] ** 2
+
+    def grad(x):
+
+    # grad(x) = [x, 0.4y]
+
+    dx = x[0]
+
+    dy = 0.4 * x[1]
+
+    return np.array([dx, dy])
+
+    print("Точка 0:", x)
+
+    print("f(x) =", f(x))
+
+    print()
+
+    # Двигаем точку против градиента.
+
+    x = x - grad(x)
+
+    print("Точка 1:", x)
+
+    print("f(x) =", f(x))
 
 
-main()
+
+def F(x1, x2):
+    return ((np.sin(x1 - 1) + x2 - 0.1) ** 2) + ((x1 - np.sin(x2 + 1) - 0.8) ** 2)
+
+
+# Градиент
+def Grad(x1, x2):
+    return np.array([2 * x1 + 2 * (x2 + np.sin(x1 - 1) - 0.1) * np.cos(x1 - 1) - 2 * np.sin(x2 + 1) - 1.6,
+                     2 * x2 - 2 * (x1 - np.sin(x2 + 1) - 0.8) * np.cos(x2 + 1) + 2 * np.sin(x1 - 1) - 0.2])
+
+    # сам метод
+
+
+def Gr_m(x1, x2, cnt=10000):
+    alpha = 0.1  # Шаг сходимости
+
+    eps = 0.000001  # точность
+
+    X_prev = np.array([x1, x2])
+
+    X = X_prev - alpha * Grad(X_prev[0], X_prev[1])
+
+    t = 50  # Необходимый параметр, если выбрать  шаг №1
+    k = 0
+
+    l, s, p = 0.1, 1, 0.5  # Необходимые параметры для варианта шага №2
+
+    while np.linalg.norm(X - X_prev) > eps and k < cnt:
+        X_prev = X.copy()
+
+        # alpha = 1/min(k+1,t)     # Шаг №1
+        k = k + 1
+
+        # alpha = l * ((s/(s+k))**p)   # Шаг №2
+
+        alpha = F(X_prev[0] - alpha * Grad(X_prev[0], X_prev[1])[0],
+                  X_prev[1] - alpha * Grad(X_prev[0], X_prev[1])[1])
+
+        # Шаг №3. Не рабочий
+
+        X = X_prev - alpha * Grad(X_prev[0], X_prev[1])  # Формула
+
+    return X, k
+
+if __name__ == '__main__':
+    result = Gr_m(0, 0)
+
+    print(result)
+
