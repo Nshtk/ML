@@ -1,66 +1,103 @@
-import numpy as np
+import math
+import scipy
+import numpy
+from pylab import *
+from sympy import *
 import matplotlib.pyplot as plt
 
+eps = 0.1
+e = 10e-8
 
-def mean_squared_error(y_true, y_predicted):
-    loss = np.sum((y_true - y_predicted) ** 2) / len(y_true)
-    return loss
+# def getGradientNumerical(func, vector):
+#     vec_len = vector.shape[0]
+#     gradient = np.zeros((vec_len, 1))
+#     for i in range(vec_len):
+#         base_vector =np.zeros((vec_len, 1))
+#         base_vector[i, 0] = 1
+#         func_plus = func(vector + (eps * base_vector))
+#         func_minus = func(vector - (eps * base_vector))
+#         a = ((func_plus - func_minus) / (2 * eps))
+#     return gradient
+def getGradientSymbolic(vector):
+    x, y = Symbol('x'),  Symbol('y')
+    function = eval(function_string)
+    diff_y = str(function.diff(y)).replace('x', str(vector[0])).replace('y', str(vector[1]))
+    diff_x = str(function.diff(x)).replace('x', str(vector[0])).replace('y', str(vector[1]))
+    return numpy.array([eval(diff_x), eval(diff_y)])
+def getGradient(vector: np.ndarray, dt: float = 0.00001) -> np.array:
+    dxdt = (function(vector + np.array([dt, 0])) - function(vector)) / dt
+    dydt = (function(vector + np.array([0, dt])) - function(vector)) / dt
+    return numpy.array([dxdt, dydt])
 
+def getGradientDescentPath(getGradient, vector: np.ndarray, minimum_global: np.ndarray, iterations_max: int = 64, learning_rate: float = 0.1) -> np.array:
+    vector_copy = vector.copy()
+    path = [np.array([vector_copy[0], vector_copy[1], function(vector_copy)])]
 
-def gradient_descent(x, y, iterations=1000, learning_rate=0.0001, stopping_threshold=1e-6):
-    losses = []
-    weights = []
-    current_weight = 0.1
-    current_bias = 0.01
-    n = float(len(x))
-    previous_loss = None
+    i = 0
+    while i < iterations_max and np.linalg.norm(path[-1] - minimum_global) > eps:
+        vector_copy = vector_copy - learning_rate * getGradient(vector_copy)
+        path.append(np.array([vector_copy[0], vector_copy[1], function(vector_copy)]))
+        i += 1
 
-    for i in range(iterations):
-        y_predicted = (current_weight * x) + current_bias
-        current_loss = mean_squared_error(y, y_predicted)
-        if previous_loss and abs(previous_loss - current_loss) <= stopping_threshold:
-            break
-        previous_loss = current_loss
-        losses.append(current_loss)
-        weights.append(current_weight)
+    return np.array(path)
+def getGradientDescentInertialPath(getGradient, vector: np.ndarray, minimum_global: np.ndarray, iterations_max: int = 64, learning_rate: float = 0.1, inertia_coef: float = 0.5) -> np.array:
+    vector_copy = vector.copy()
+    vector_copy_previous = vector.copy()
+    path = [np.array([vector[0], vector[1], function(vector)])]
 
-        weight_derivative = -(2 / n) * sum(x * (y - y_predicted))
-        bias_derivative = -(2 / n) * sum(y - y_predicted)
-        current_weight = current_weight - (learning_rate * weight_derivative)
-        current_bias = current_bias - (learning_rate * bias_derivative)
+    i = 0
+    while i < iterations_max and np.linalg.norm(path[-1] - minimum_global) > eps:
+        vector_copy_tmp=vector_copy
+        vector_copy = vector_copy - learning_rate * getGradient(vector_copy) + inertia_coef * (vector_copy - vector_copy_previous)
+        vector_copy_previous = vector_copy_tmp
+        path.append(np.array([vector_copy[0], vector_copy[1], function(vector_copy)]))
+        i += 1
 
-        print(f"Iteration {i + 1}: Loss {current_loss}, Weight {current_weight}, Bias {current_bias}")
+    return np.array(path)
 
-    plt.figure(figsize=(8, 6))
-    plt.plot(weights, losses)
-    plt.scatter(weights, losses, marker='o', color='red')
-    plt.title("Losses vs Weights")
-    plt.ylabel("Loss")
-    plt.xlabel("Weight")
+def getGradientDescentAdaptivePath(getGradient, vector: np.ndarray, minimum_global: np.ndarray, iterations_max: int = 64, learning_rate: float = 0.1, adaptive_coef_1: float=0.5, adaptive_coef_2: float=0.9) -> np.array:
+    vector_copy = vector.copy()
+    path = [np.array([vector_copy[0], vector_copy[1], function(vector_copy)])]
+    m_1 = np.array([0, 0])
+    m_2 = np.array([0, 0])
+
+    i = 0
+    while i < iterations_max and np.linalg.norm(path[-1] - minimum_global) > eps:
+        m_1 = adaptive_coef_1 * m_1 + (1 - adaptive_coef_1) * getGradient(vector)
+        m_2 = adaptive_coef_2 * m_2 + (1 - adaptive_coef_2) * getGradient(vector) ** 2
+        vector_copy = vector_copy - learning_rate * m_1 / (np.sqrt(m_2) + e)
+        path.append(np.array([vector_copy[0], vector_copy[1], function(vector_copy)]))
+        i += 1
+
+    return np.array(path)
+
+if __name__ == '__main__':
+    function = None
+    # function_string = input()  # Функция сферы 'xy[0] ** 2 + xy[1] ** 2' + мультифункция -xy[0] * np.sin(4 * np.pi * xy[0]) -xy[1] * np.sin(4 * np.pi * xy[1])
+    # if function_string == '':
+    function_string = 'xy[0] ** 2 + xy[1] ** 2'  # -20*math.exp(-0.2*math.sqrt(0.5*(xy[0]**2 + xy[1]**2)))-math.exp(0.5*math.cos(2*math.pi*xy[0])+math.cos(2*math.pi*xy[1]))+math.e+20
+    minima_analytical=np.array([-0.54719, -1.54719, -1.9133])
+    function_area=numpy.array([numpy.arange(-3, 3, 1), numpy.arange(-3, 3, 1)])
+    vector_initial=np.array([2, 2.7])
+
+    exec('function = lambda xy: ' + function_string)
+    function_string = function_string.replace('xy[0]', 'x').replace('xy[1]', 'y')
+    path = getGradientDescentPath(getGradient, vector_initial, minima_analytical, 1000)
+
+    grid_x, grid_y = numpy.meshgrid(function_area[0], function_area[1])
+    grid_z=function([grid_x, grid_y])
+    best_z_position=numpy.unravel_index(grid_z.argmax(), grid_z.shape)
+
+    print(f"Количество итераций: {len(path)}, минимум функции: {path[-1]}, погрешность: {abs(path[-1]-minima_analytical)}")
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.plot_surface(grid_x, grid_y, grid_z, cmap='hot', alpha=0.5)
+    ax.plot(path[:, 0], path[:, 1], path[:, 2], '-o', color='b', label='Градиентный спуск', alpha=0.7)
+    ax.set_title(title, fontsize=12, fontweight="bold", loc="left")
+    ax.legend(loc="upper left")
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+    ax.scatter3D([grid_x[best_z_position[0]][best_z_position[1]]], [grid_y[best_z_position[0]][best_z_position[1]]], [grid_z.max()], s=[100], c="g")
+
     plt.show()
-
-    return current_weight, current_bias
-
-
-def main():
-    X = np.array([32.50234527, 53.42680403, 61.53035803, 47.47563963, 59.81320787,
-                  55.14218841, 52.21179669, 39.29956669, 48.10504169, 52.55001444,
-                  45.41973014, 54.35163488, 44.1640495, 58.16847072, 56.72720806,
-                  48.95588857, 44.68719623, 60.29732685, 45.61864377, 38.81681754])
-    Y = np.array([31.70700585, 68.77759598, 62.5623823, 71.54663223, 87.23092513,
-                  78.21151827, 79.64197305, 59.17148932, 75.3312423, 71.30087989,
-                  55.16567715, 82.47884676, 62.00892325, 75.39287043, 81.43619216,
-                  60.72360244, 82.89250373, 97.37989686, 48.84715332, 56.87721319])
-
-    estimated_weight, estimated_bias = gradient_descent(X, Y, iterations=2000)
-    print(f"Estimated Weight: {estimated_weight}\nEstimated Bias: {estimated_bias}")
-    Y_pred = estimated_weight * X + estimated_bias
-    plt.figure(figsize=(8, 6))
-    plt.scatter(X, Y, marker='o', color='red')
-    plt.plot([min(X), max(X)], [min(Y_pred), max(Y_pred)], color='blue', markerfacecolor='red', markersize=10, linestyle='dashed')
-    plt.xlabel("X")
-    plt.ylabel("Y")
-    plt.show()
-
-
-main()
