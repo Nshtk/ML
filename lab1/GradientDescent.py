@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 import celluloid
 
 class Utility:
-    eps = 0.1
+    eps = 0.01
     e = 10e-8
 
 class TestFunction:
-    def __init__(self, title: str, function_symbolic: str, area: numpy.ndarray, bounds: numpy.ndarray, minima_analytical: numpy.ndarray, vector_initial: numpy.ndarray) -> None:
+    def __init__(self, title: str, function_symbolic: str, area: list, bounds: numpy.ndarray, minima_analytical: numpy.ndarray, vector_initial: numpy.ndarray) -> None:
         self._title = title
         self._function_symbolic = function_symbolic
         self._function = None
@@ -144,6 +144,7 @@ def plotTestFunction(test_function: TestFunction, higlight_maxima: bool = True, 
         ax.plot(path[:, 0], path[:, 1], path[:, 2], color='b', label='Градиентный спуск', alpha=0.7)
         ax.scatter(path[i, 0], path[i, 1], path[i, 2], '-o')
         camera.snap()
+
     if higlight_maxima:
         position_z = numpy.unravel_index(grid_z.argmax(), grid_z.shape)
         ax.scatter3D([grid_x[position_z[0]][position_z[1]]], [grid_y[position_z[0]][position_z[1]]], [grid_z.max()], s=[100], c="g", label='Глобальный максимум')
@@ -154,11 +155,13 @@ def plotTestFunction(test_function: TestFunction, higlight_maxima: bool = True, 
     plt.show()
 
 if __name__ == '__main__':
-    # function_string = input()  # Функция сферы 'xy[0] ** 2 + xy[1] ** 2' + мультифункция -xy[0] * numpy.sin(4 * numpy.pi * xy[0]) -xy[1] * numpy.sin(4 * numpy.pi * xy[1])
+    # function_string = input()
     # if function_string == '':
-    function_string = 'xy[0] ** 2 + xy[1] ** 2'
-    test_function=TestFunction("Функция сферы", function_string, numpy.array([numpy.arange(-3, 3, 1), numpy.arange(-3, 3, 1)]), numpy.array([[-300., -300.], [300., 300.]]), numpy.array([0, 0, 0]), numpy.array([2, 2.7]))
-    #test_function=TestFunction("Мультифункция", function_string, numpy.array([numpy.arange(-3, 3, 1), numpy.arange(-3, 3, 1)]), numpy.array([-0.54719, -1.54719, -1.9133]), numpy.array([2, 2.7]))
+    #function_string = 'xy[0] ** 2 + xy[1] ** 2'
+    function_string = 'numpy.sin(xy[0] + xy[1]) + (xy[0] - xy[1]) ** 2 -1.5 * xy[0] + 2.5 * xy[1] + 1'
+    #test_function=TestFunction("Функция сферы", function_string, numpy.array([numpy.arange(-3, 3, 1), numpy.arange(-3, 3, 1)]), numpy.array([[-300., -300.], [300., 300.]]), numpy.array([0, 0, 0]), numpy.array([2, 2.7]))
+
+    test_function=TestFunction("Функция МакКормика", function_string, [numpy.arange(-1.5, 4, 1), numpy.arange(-3, 4, 1)],  numpy.array([[-300., -300.], [300., 300.]]), numpy.array([-0.54719, -1.54719, -1.9133]), numpy.array([1, -1]))
     path = getGradientDescentAdaptivePath(test_function, test_function.vector_initial, getGradient, 1000)
     print(f"Количество итераций: {len(path)}, минимум функции: {path[-1]}, погрешность: {abs(path[-1]-test_function.minima)}")
     plotTestFunction(test_function)

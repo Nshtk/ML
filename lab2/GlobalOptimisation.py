@@ -8,7 +8,7 @@ class Utility:
     e = 10e-8
 
 class TestFunction:
-    def __init__(self, title: str, function_symbolic: str, area: numpy.ndarray, bounds: numpy.ndarray, minima_analytical: numpy.ndarray, vector_initial: numpy.ndarray) -> None:
+    def __init__(self, title: str, function_symbolic: str, area: list, bounds: numpy.ndarray, minima_analytical: numpy.ndarray, vector_initial: numpy.ndarray) -> None:
         self._title = title
         self._function_symbolic = function_symbolic
         self._function = None
@@ -71,8 +71,8 @@ def plotOptimisation(test_function: TestFunction, genes, fitnesses):
     ax.set_ylabel("Fitness")
     ax.legend()
 
-test_functions=[TestFunction("Функция сферы", 'xy[0] ** 2 + xy[1] ** 2', numpy.array([numpy.arange(-3, 3, 1), numpy.arange(-3, 3, 1)]), numpy.array([[-300., -300.], [300., 300.]]), numpy.array([0, 0, 0]), numpy.array([2, 2.7])),
-                TestFunction("Функция мультифункция", 'xy[0] ** 2 + xy[1] ** 2', numpy.array([numpy.arange(-1.5, 4, 1), numpy.arange(-3, 4, 1)]), numpy.array([[-300., -300.], [300., 300.]]), numpy.array([-0.54719, -1.54719, -1.9133]), numpy.array([2, 2.7]))]
+test_functions=[TestFunction("Функция сферы", 'xy[0] ** 2 + xy[1] ** 2', [numpy.arange(-3, 3, 1), numpy.arange(-3, 3, 1)], numpy.array([[-300., -300.], [300., 300.]]), numpy.array([0, 0, 0]), numpy.array([2, 2.7])),
+                TestFunction("Функция МакКормика", 'numpy.sin(xy[0] + xy[1]) + (xy[0] - xy[1]) ** 2 -1.5 * xy[0] + 2.5 * xy[1] + 1', [numpy.arange(-1.5, 4, 1), numpy.arange(-3, 4, 1)], numpy.array([[-2., -300.], [2., 300.]]), numpy.array([-0.54719, -1.54719, -1.9133]), numpy.array([1, -1]))]
 algorithms=[('Simple Genetic Algorithm', pygmo.sga(1)), ('Self-adaptive Differential Evolution', pygmo.de1220(1)), ('Particle Swarm Optimization', pygmo.pso(1))]
 results=[]
 
@@ -80,7 +80,7 @@ for test_function in test_functions:
     i=0
     for algorithm in algorithms:
         result=[test_function.title, algorithm[0]]
-        data=list(optimise(test_function, pygmo.algorithm(algorithm[1])))
+        data=optimise(test_function, pygmo.algorithm(algorithm[1]))
         result.append(data[1][-1])
         results.append(result)
         plotOptimisation(test_function, data[0], data[1])
