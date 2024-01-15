@@ -108,7 +108,7 @@ def getGradientDescentAdaptivePath(test_function: TestFunction, vector_initial: 
         i += 1
 
     return numpy.array(path)
-def getGradientDescentEvolutionPath(test_function: TestFunction, vector_initial: numpy.ndarray, getGradient, iterations_max: int = 64, learning_rate: float = 0.1) -> numpy.array:
+def getGradientDescentEvolutionPath(test_function: TestFunction, vector_initial: numpy.ndarray, getGradient, iterations_max: int = 64, learning_rate: float = 0.3) -> numpy.array:
     vector_copy = vector_initial.copy()
     path = [numpy.array([vector_copy[0], vector_copy[1], test_function.function(vector_copy)])]
     z_best=float('inf')
@@ -158,10 +158,11 @@ if __name__ == '__main__':
     # function_string = input()
     # if function_string == '':
     #function_string = 'xy[0] ** 2 + xy[1] ** 2'
-    function_string = 'numpy.sin(xy[0] + xy[1]) + (xy[0] - xy[1]) ** 2 -1.5 * xy[0] + 2.5 * xy[1] + 1'
-    #test_function=TestFunction("Функция сферы", function_string, numpy.array([numpy.arange(-3, 3, 1), numpy.arange(-3, 3, 1)]), numpy.array([[-300., -300.], [300., 300.]]), numpy.array([0, 0, 0]), numpy.array([2, 2.7]))
+    #function_string = 'sympy.sin(xy[0] + xy[1]) + (xy[0] - xy[1]) ** 2 -1.5 * xy[0] + 2.5 * xy[1] + 1'
 
-    test_function=TestFunction("Функция МакКормика", function_string, [numpy.arange(-1.5, 4, 1), numpy.arange(-3, 4, 1)],  numpy.array([[-300., -300.], [300., 300.]]), numpy.array([-0.54719, -1.54719, -1.9133]), numpy.array([1, -1]))
-    path = getGradientDescentAdaptivePath(test_function, test_function.vector_initial, getGradient, 1000)
+    test_function=TestFunction("Функция сферы", 'xy[0] ** 2 + xy[1] ** 2', [numpy.arange(-3, 3, 1), numpy.arange(-3, 3, 1)], numpy.array([[-300., -300.], [300., 300.]]), numpy.array([0, 0, 0]), numpy.array([2, 2.7]))
+    #test_function=TestFunction("Функция МакКормика", 'numpy.sin(xy[0] + xy[1]) + (xy[0] - xy[1]) ** 2 -1.5 * xy[0] + 2.5 * xy[1] + 1', [numpy.arange(-1.5, 4, 1), numpy.arange(-3, 4, 1)],  numpy.array([[-300., -300.], [300., 300.]]), numpy.array([-0.54719, -1.54719, -1.9133]), numpy.array([1, -1]))
+
+    path = getGradientDescentPath(test_function, test_function.vector_initial, getGradient, 1000)
     print(f"Количество итераций: {len(path)}, минимум функции: {path[-1]}, погрешность: {abs(path[-1]-test_function.minima)}")
     plotTestFunction(test_function)
