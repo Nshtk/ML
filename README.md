@@ -1,1 +1,1 @@
-# Солдатов Вячеслав, М8О-114М-23
+## Gradient descent and global optimisation
